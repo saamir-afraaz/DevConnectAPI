@@ -21,6 +21,14 @@ app.use(express.json());
 
 app.use(cors());
 
+app.get('/', (req, res) => {
+    res.status(200).json({
+        message: "Welcome to the DevConnect API! 🚀",
+        status: "Online and fully operational.",
+        documentation: "Coming soon..." 
+    });
+});
+
 app.use('/api/auth',authRoutes)
 app.use('/api/posts',postRoutes)
 
