@@ -5,7 +5,8 @@ const dotenv = require('dotenv').config()
 const authRoutes = require('./routers/authRoutes')
 const postRoutes = require('./routers/postRoutes')
 const rateLimit = require('express-rate-limit')
-const redis = require('./config/redis')
+
+require('./config/redis')
 
 const app = express();
 
