@@ -6,6 +6,8 @@ const authRoutes = require('./routers/authRoutes')
 const postRoutes = require('./routers/postRoutes')
 const rateLimit = require('express-rate-limit')
 
+const app = express();
+
 const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, 
     max: 100, 
@@ -37,8 +39,6 @@ const DBconnect = (async () => {
 })
 
 DBconnect();
-
-const app = express();
 
 app.use(express.json());
 
