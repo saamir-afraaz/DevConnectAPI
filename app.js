@@ -5,6 +5,7 @@ const dotenv = require('dotenv').config()
 const authRoutes = require('./routers/authRoutes')
 const postRoutes = require('./routers/postRoutes')
 const rateLimit = require('express-rate-limit')
+const redis = require('./config/redis')
 
 const app = express();
 
@@ -23,7 +24,9 @@ const authLimiter = rateLimit({
     max: 5,
     message: {
         message: "Too many login attempts. Please try again in an hour."
-    }
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
 });
 
 app.use('/api', generalLimiter);

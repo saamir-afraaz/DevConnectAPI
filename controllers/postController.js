@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler')
 const Post = require('../models/Post')
+const redisClient = require('../config/redis')
 
 exports.createPost = asyncHandler(async (req,res) => {
     const {title,content,tags} = req.body
@@ -14,18 +15,22 @@ exports.createPost = asyncHandler(async (req,res) => {
 })
 
 exports.getPosts = asyncHandler(async (req, res) => {
-    const cachedPosts = await redisClient.get('all_posts');
-
-    if (cachedPosts) {
-        console.log("Serving from Cache!");
-        return res.json(JSON.parse(cachedPosts)); 
+    try {
+        const cachedPosts = await redisClient.get('all_posts');
+        if (cachedPosts) {
+            return res.json(JSON.parse(cachedPosts)); 
+        }
+    } catch (err) {
+        console.error("Redis Cache Error:", err);
     }
 
-    console.log("Serving from MongoDB");
     const posts = await Post.find().sort({ createdAt: -1 }).populate('author', 'name username');
-
-
-    await redisClient.setEx('all_posts', 3600, JSON.stringify(posts));
+    
+    try {
+        await redisClient.setEx('all_posts', 3600, JSON.stringify(posts));
+    } catch (err) {
+        console.error("Redis Set Error:", err);
+    }
 
     res.json(posts);
 });
@@ -63,21 +68,23 @@ exports.deletePost = asyncHandler(async (req,res) => {
 })
 
 exports.toggleLike = asyncHandler(async (req,res) => {
-    const post = Post.findById(req.params.id)
-    const userId = req.user.id
+    const post = await Post.findById(req.params.id); 
+    const userId = req.user.id;
 
     if(!post){
         res.status(404);
         throw new Error("Post not Found");
     }
 
-    const isLiked = post.likes.includes(userId)
+    const isLiked = post.likes.some(id => id.toString() === userId.toString());
     
     if(isLiked){
-        post.likes = post.likes.filter(user => user.id !== userId)
+        post.likes = post.likes.filter(id => id.toString() !== userId.toString());
     } else {
-        post.likes.push(userId)
+        post.likes.push(userId);
     }
-    await post.save()
+
+    await post.save();
+    await redisClient.del('all_posts'); 
     res.json(post);
-})
+});
