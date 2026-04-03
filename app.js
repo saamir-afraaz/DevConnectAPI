@@ -10,6 +10,10 @@ require('./config/redis')
 
 const app = express();
 
+app.use(express.json());
+
+app.use(cors());
+
 const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, 
     max: 100, 
@@ -43,10 +47,6 @@ const DBconnect = (async () => {
 })
 
 DBconnect();
-
-app.use(express.json());
-
-app.use(cors());
 
 app.get('/', (req, res) => {
     res.status(200).json({
