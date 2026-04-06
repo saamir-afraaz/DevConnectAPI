@@ -75,16 +75,19 @@ exports.toggleLike = asyncHandler(async (req,res) => {
         res.status(404);
         throw new Error("Post not Found");
     }
+    let message = "";
 
     const isLiked = post.likes.some(id => id.toString() === userId.toString());
     
     if(isLiked){
         post.likes = post.likes.filter(id => id.toString() !== userId.toString());
+        message = "Post unliked"
     } else {
         post.likes.push(userId);
+        message = "Post liked"
     }
 
     await post.save();
     await redisClient.del('all_posts'); 
-    res.json(post);
+    res.json({message: message});
 });
